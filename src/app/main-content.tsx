@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -14,6 +14,8 @@ import { CodeEditor } from "@/components/editor/CodeEditor";
 import { PreviewFrame } from "@/components/preview/PreviewFrame";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HeaderActions } from "@/components/HeaderActions";
+import { Hero } from "@/components/landing/Hero";
+import { Features } from "@/components/landing/Features";
 
 interface MainContentProps {
   user?: {
@@ -32,12 +34,30 @@ interface MainContentProps {
 
 export function MainContent({ user, project }: MainContentProps) {
   const [activeView, setActiveView] = useState<"preview" | "code">("preview");
+  const appRef = useRef<HTMLDivElement>(null);
+
+  const handleGetStarted = () => {
+    appRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // For anonymous users, show landing page + app interface
+  const showLanding = !user && !project;
 
   return (
     <FileSystemProvider initialData={project?.data}>
       <ChatProvider projectId={project?.id} initialMessages={project?.messages}>
-        <div className="h-screen w-screen overflow-hidden bg-neutral-50">
-          <ResizablePanelGroup direction="horizontal" className="h-full">
+        <div className={showLanding ? "min-h-screen bg-neutral-50" : "h-screen w-screen overflow-hidden bg-neutral-50"}>
+          {/* Landing Page Sections (only for anonymous users) */}
+          {showLanding && (
+            <>
+              <Hero onGetStarted={handleGetStarted} />
+              <Features />
+            </>
+          )}
+
+          {/* Main App Interface */}
+          <div ref={appRef} className="h-screen w-screen overflow-hidden bg-neutral-50">
+            <ResizablePanelGroup direction="horizontal" className="h-full">
             {/* Left Panel - Chat */}
             <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
               <div className="h-full flex flex-col bg-white">
@@ -110,6 +130,7 @@ export function MainContent({ user, project }: MainContentProps) {
               </div>
             </ResizablePanel>
           </ResizablePanelGroup>
+          </div>
         </div>
       </ChatProvider>
     </FileSystemProvider>
